@@ -3,6 +3,8 @@ from tkinter import ttk, filedialog, messagebox
 import os
 from PIL import Image, ImageTk
 
+from mosaic_functions import bayer_mosaic_generator # Import function for mosaicing
+
 # --- Placeholder Functions ---
 
 def generate_synthetic_images(output_path):
@@ -14,10 +16,7 @@ def generate_synthetic_images(output_path):
     #     create_dummy_image(os.path.join(output_path, f'synthetic_{i}.png'))
     pass
 
-def bayer_mosaic_generator(input_path, output_path):
-    """Placeholder for the Bayer mosaicing logic."""
-    print(f"Generating Bayer mosaic from: {input_path} to: {output_path}")
-    pass
+
 
 def nearest_neighbour(input_path, output_path):
     """Placeholder for Nearest Neighbour demosaicing."""
