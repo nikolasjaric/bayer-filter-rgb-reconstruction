@@ -3,20 +3,9 @@ from tkinter import ttk, filedialog, messagebox
 import os
 from PIL import Image, ImageTk
 
-from mosaic_functions import bayer_mosaic_generator # Import function for mosaicing
-
+from functions.mosaic_functions import bayer_mosaic_generator
+from functions.synthetic_image_functions import generate_synthetic_images
 # --- Placeholder Functions ---
-
-def generate_synthetic_images(output_path):
-    """Placeholder for the synthetic image generation logic."""
-    print(f"Generating synthetic images to: {output_path}")
-    # In a real application, you would add your image generation code here.
-    # Example:
-    # for i in range(10):
-    #     create_dummy_image(os.path.join(output_path, f'synthetic_{i}.png'))
-    pass
-
-
 
 def nearest_neighbour(input_path, output_path):
     """Placeholder for Nearest Neighbour demosaicing."""
