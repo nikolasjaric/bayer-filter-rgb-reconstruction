@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 from functions.mosaic_functions import bayer_mosaic_generator
 from functions.synthetic_image_functions import generate_synthetic_images
 # --- Placeholder Functions ---
+from functions.analysis import run_analysis
 
 def nearest_neighbour(input_path, output_path):
     """Placeholder for Nearest Neighbour demosaicing."""
@@ -42,11 +43,11 @@ def cnn_based_reconstruction(input_path, output_path):
     print(f"Running CNN-Based Reconstruction demosaicing from: {input_path} to: {output_path}")
     pass
 
-def run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method):
-    """Placeholder for the image analysis logic."""
-    print(f"Analyzing images. Original: {original_folder}, Reconstructed: {reconstructed_folder}, Method: {method}, Output: {analysis_output_folder}")
-    # In a real application, you would calculate metrics (MSE, PSNR, etc.) and save to a file.
-    messagebox.showinfo("Analysis", f"Analysis metrics for {method} calculated and saved to analysis.txt.")
+# def run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method):
+#     """Placeholder for the image analysis logic."""
+#     print(f"Analyzing images. Original: {original_folder}, Reconstructed: {reconstructed_folder}, Method: {method}, Output: {analysis_output_folder}")
+#     # In a real application, you would calculate metrics (MSE, PSNR, etc.) and save to a file.
+#     messagebox.showinfo("Analysis", f"Analysis metrics for {method} calculated and saved to analysis.txt.")
 
 
 # Dictionary to map dropdown names to the actual functions
@@ -449,7 +450,7 @@ class ImageProcessingGUI:
         if not (os.path.isdir(original_folder) and os.path.isdir(reconstructed_folder) and os.path.isdir(analysis_output_folder) and method):
             self.lbl_analysis_result.config(text="Please select all valid folders and a method.", foreground="red")
             return
-            
+
         run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method)
         self.lbl_analysis_result.config(text=f"Analysis for {method} complete. Results saved.", foreground="green")
 
