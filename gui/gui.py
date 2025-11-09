@@ -3,10 +3,20 @@ from tkinter import ttk, filedialog, messagebox
 import os
 from PIL import Image, ImageTk
 
-from functions.mosaic_functions import bayer_mosaic_generator
+from functions.mosaic_functions_v2 import bayer_mosaic_generator
 from functions.synthetic_image_functions import generate_synthetic_images
+
+
+
+
+
 # --- Placeholder Functions ---
 from functions.analysis import run_analysis
+
+import subprocess
+import sys
+from pathlib import Path
+
 
 def nearest_neighbour(input_path, output_path):
     """Placeholder for Nearest Neighbour demosaicing."""
@@ -39,9 +49,26 @@ def total_variation_regularization_tv(input_path, output_path):
     pass
 
 def cnn_based_reconstruction(input_path, output_path):
-    """Placeholder for CNN-Based Reconstruction demosaicing."""
+
+    import subprocess, sys
+    from pathlib import Path
+
+    cnn_root = Path(__file__).resolve().parents[1] / "functions" / "cnn"
+
+    cmd = [
+        sys.executable,
+        "-m", "demosaicnet_ours",
+        "--input_dir", str(input_path),
+        "--output_dir", str(output_path),
+        "--noise", "0.0",
+    ]
+
+    subprocess.run(cmd, cwd=str(cnn_root), check=True)
+
     print(f"Running CNN-Based Reconstruction demosaicing from: {input_path} to: {output_path}")
-    pass
+
+    
+
 
 # def run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method):
 #     """Placeholder for the image analysis logic."""
