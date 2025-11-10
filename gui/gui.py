@@ -464,8 +464,9 @@ class ImageProcessingGUI:
         self.lbl_analysis_result.pack(pady=5)
         
         # --- Right Section: Placeholder ---
-        ttk.Label(right_frame, text="Analysis Results/Visualization Placeholder", font=("Helvetica", 12, "bold")).pack(pady=20)
-        ttk.Label(right_frame, text="This section would typically display charts, tables, or a comparison view of the images.").pack()
+        ttk.Label(right_frame, text="Analysis Results", font=("Helvetica", 12, "bold")).pack(pady=20)
+        self.txt_analysis_results = ttk.Label(right_frame, text="This section would typically display charts, tables, or a comparison view of the images.")
+        self.txt_analysis_results.pack()
         
     def _run_analysis(self):
         """Action for the Analyze button."""
@@ -480,6 +481,13 @@ class ImageProcessingGUI:
 
         run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method)
         self.lbl_analysis_result.config(text=f"Analysis for {method} complete. Results saved.", foreground="green")
+
+        txt_output = ""
+        with open(analysis_output_folder+"/analysis.txt", 'r') as file:
+            for line in file:
+                txt_output += line
+        self.txt_analysis_results.config(text=txt_output)
+        
 
 
 if __name__ == "__main__":

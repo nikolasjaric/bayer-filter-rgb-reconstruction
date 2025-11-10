@@ -19,9 +19,6 @@ def PSNR(original, compressed):
 def run_analysis (original_folder, reconstructed_folder, analysis_output_folder, method):
     originals = Path(original_folder).glob('*.png')
     reconstructeds = Path(reconstructed_folder).glob('*.png')
-    values_mse = []
-    values_psnr = []
-    # ... 
     file_name = analysis_output_folder+"/analysis.txt"
     f = open(file_name, "w")
 
@@ -35,16 +32,14 @@ def run_analysis (original_folder, reconstructed_folder, analysis_output_folder,
     for original in originals:
         image = cv2.imread(original)
         for reconstructed in reconstructeds:
-            print(reconstructed.name, str(method)+"_"+original.name)
             if (reconstructed.name == str(method)+"_"+original.name):
                 compressed = cv2.imread(reconstructed, 1)
-                f.write(original.name)
 
+                f.write(original.name)
                 value = MSE(image, compressed)
-                values_mse.append(value)
                 f.write("\n MSE: " + str(value))
                 value = PSNR(image, compressed)
-                values_psnr.append(value)
                 f.write("\n PSNR: " + str(value) + " dB")
-        # ...
+                # ...
     f.close()
+    return 
