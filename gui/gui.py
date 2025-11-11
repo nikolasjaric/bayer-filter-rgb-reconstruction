@@ -7,7 +7,7 @@ from functions.mosaic_functions_v2 import bayer_mosaic_generator
 from functions.synthetic_image_functions import generate_synthetic_images
 
 
-
+from functions.nearest_neighbour import nearest_neighbour
 
 
 # --- Placeholder Functions ---
@@ -17,11 +17,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-def nearest_neighbour(input_path, output_path):
-    """Placeholder for Nearest Neighbour demosaicing."""
-    print(f"Running Nearest Neighbour demosaicing from: {input_path} to: {output_path}")
-    pass
 
 def bilinear_interpolation(input_path, output_path):
     """Placeholder for Bilinear Interpolation demosaicing."""
