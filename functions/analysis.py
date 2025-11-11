@@ -20,26 +20,17 @@ def run_analysis (original_folder, reconstructed_folder, analysis_output_folder,
     originals = Path(original_folder).glob('*.png')
     reconstructeds = Path(reconstructed_folder).glob('*.png')
     file_name = analysis_output_folder+"/analysis.txt"
-    f = open(file_name, "w")
+    f = open(file_name, "w")  
 
-    method = method.lower()
-    method = method.replace("-", " ")
-    method = method.replace("(", "")
-    method = method.replace(")", "")
-    m = method.split(" ")
-    method = "_".join(m)    
-
-    for original in originals:
+    for original, reconstructed in zip(originals,reconstructeds):
         image = cv2.imread(original)
-        for reconstructed in reconstructeds:
-            if (reconstructed.name == str(method)+"_"+original.name):
-                compressed = cv2.imread(reconstructed, 1)
+        compressed = cv2.imread(reconstructed, 1)
 
-                f.write(original.name)
-                value = MSE(image, compressed)
-                f.write("\n MSE: " + str(value))
-                value = PSNR(image, compressed)
-                f.write("\n PSNR: " + str(value) + " dB")
-                # ...
+        f.write(original.name+", "+reconstructed.name)
+        value = MSE(image, compressed)
+        f.write("\n MSE: " + str(value))
+        value = PSNR(image, compressed)
+        f.write("\n PSNR: " + str(value) + " dB\n")
+        # ...
     f.close()
     return 
