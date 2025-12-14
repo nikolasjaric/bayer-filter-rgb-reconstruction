@@ -5,13 +5,11 @@ from PIL import Image, ImageTk
 
 from functions.mosaic_functions_v2 import bayer_mosaic_generator
 from functions.synthetic_image_functions import generate_synthetic_images
-
-
 from functions.nearest_neighbour import nearest_neighbour
-
+from functions.analysis import run_analysis
+from functions.noise import add_noise
 
 # --- Placeholder Functions ---
-from functions.analysis import run_analysis
 
 import subprocess
 import sys
@@ -91,9 +89,12 @@ class ImageProcessingGUI:
 
         # --- Variables to store paths and selections ---
         self.synth_output_folder = tk.StringVar(value="No folder selected.")
+        self.noise_input_folder = tk.StringVar(value="No folder selected.")
+        self.noise_output_folder = tk.StringVar(value="No folder selected.")
         self.mosaic_input_folder = tk.StringVar(value="No folder selected.")
         self.mosaic_output_folder = tk.StringVar(value="No folder selected.")
         
+
         self.demosaic_input_folder = tk.StringVar(value="No folder selected.")
         self.demosaic_output_folder = tk.StringVar(value="No folder selected.")
         self.demosaic_method = tk.StringVar()
@@ -251,6 +252,34 @@ class ImageProcessingGUI:
         # Result message label
         self.lbl_synth_result = ttk.Label(synth_frame, text="", foreground="green")
         self.lbl_synth_result.pack(pady=5)
+
+        # --- Left Section: Add Noise ---
+        
+        ttk.Label(left_frame, text="Add Noise", font=("Helvetica", 12, "bold")).pack(pady=(20, 5), padx=5, anchor='w')
+
+        # Choose input folder button
+        btn_choose_noise_in = ttk.Button(left_frame, text="Choose input folder", command=lambda: self._choose_folder(self.noise_input_folder))
+        btn_choose_noise_in.pack(pady=5, fill='x', padx=5)
+
+        # Path display
+        lbl_noise_in_path = ttk.Label(left_frame, textvariable=self.noise_input_folder, wraplength=300)
+        lbl_noise_in_path.pack(pady=5, padx=5)
+
+        # Choose output folder button
+        btn_choose_noise_out = ttk.Button(left_frame, text="Choose output folder for mosaic", command=lambda: self._choose_folder(self.noise_output_folder))
+        btn_choose_noise_out.pack(pady=5, fill='x', padx=5)
+        
+        # Path display
+        lbl_noise_out_path = ttk.Label(left_frame, textvariable=self.noise_output_folder, wraplength=300)
+        lbl_noise_out_path.pack(pady=5, padx=5)
+
+        # Run Add Noise button
+        btn_run_noise = ttk.Button(left_frame, text="Run Add Noise", command=self._run_add_noise)
+        btn_run_noise.pack(pady=10, fill='x', padx=5)
+        
+        # Result message label
+        self.lbl_noise_result = ttk.Label(left_frame, text="", foreground="green")
+        self.lbl_noise_result.pack(pady=5, padx=5)
         
         # --- Left Section: Image Mosaicing ---
         
@@ -308,6 +337,17 @@ class ImageProcessingGUI:
         else:
             self.lbl_synth_result.config(text="Please choose a valid output folder.", foreground="red")
 
+    def _run_add_noise(self):
+        """Action for the Run Add Noise button."""
+        input_path = self.noise_input_folder.get()
+        output_path = self.noise_output_folder.get()
+        
+        if os.path.isdir(input_path) and os.path.isdir(output_path):
+            add_noise(input_path, output_path)
+            self.lbl_noise_result.config(text="Noise added", foreground="green")
+        else:
+            self.lbl_noise_result.config(text="Please choose valid input and output folders.", foreground="red")
+
     def _run_bayer_mosaic(self):
         """Action for the Run Bayer Mosaic Generator button."""
         input_path = self.mosaic_input_folder.get()
@@ -318,7 +358,6 @@ class ImageProcessingGUI:
             self.lbl_mosaic_result.config(text="Bayer mosaic generated.", foreground="green")
         else:
             self.lbl_mosaic_result.config(text="Please choose valid input and output folders.", foreground="red")
-
 
     # --- Tab 3: Demosaicing ---
     def _setup_demosaicing_tab(self, tab):
