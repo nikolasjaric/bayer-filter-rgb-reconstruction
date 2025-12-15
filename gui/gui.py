@@ -63,13 +63,6 @@ def cnn_based_reconstruction(input_path, output_path):
     
 
 
-# def run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method):
-#     """Placeholder for the image analysis logic."""
-#     print(f"Analyzing images. Original: {original_folder}, Reconstructed: {reconstructed_folder}, Method: {method}, Output: {analysis_output_folder}")
-#     # In a real application, you would calculate metrics (MSE, PSNR, etc.) and save to a file.
-#     messagebox.showinfo("Analysis", f"Analysis metrics for {method} calculated and saved to analysis.txt.")
-
-
 # Dictionary to map dropdown names to the actual functions
 DEMOSAIC_METHODS = {
     "Nearest Neighbour": nearest_neighbour,
@@ -497,11 +490,27 @@ class ImageProcessingGUI:
         self.lbl_analysis_result = ttk.Label(left_frame, text="", foreground="green")
         self.lbl_analysis_result.pack(pady=5)
         
-        # --- Right Section: Placeholder ---
-        ttk.Label(right_frame, text="Analysis Results", font=("Helvetica", 12, "bold")).pack(pady=20)
-        self.txt_analysis_results = ttk.Label(right_frame, text="This section would typically display charts, tables, or a comparison view of the images.")
-        self.txt_analysis_results.pack()
+        # --- Right Section: Analysis Results (Updated to use Text widget) ---
+        ttk.Label(right_frame, text="Analysis Results", font=("Helvetica", 12, "bold")).pack(pady=5)
         
+        # Frame for Text widget and Scrollbar
+        text_frame = ttk.Frame(right_frame)
+        text_frame.pack(expand=True, fill='both', padx=5, pady=5)
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(text_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Text Widget
+        # Using a monospaced font helps with table alignment
+        self.txt_analysis_results = tk.Text(text_frame, wrap=tk.NONE, yscrollcommand=scrollbar.set, height=20, width=50, font=('Consolas', 10))
+        self.txt_analysis_results.insert(tk.END, "Run analysis to view results (MSE, PSNR, etc.) here.")
+        self.txt_analysis_results.config(state=tk.DISABLED) # Make it read-only initially
+        self.txt_analysis_results.pack(side=tk.LEFT, expand=True, fill='both')
+        
+        # Connect scrollbar to Text widget
+        scrollbar.config(command=self.txt_analysis_results.yview)
+
     def _run_analysis(self):
         """Action for the Analyze button."""
         original_folder = self.analysis_original_folder.get()
@@ -513,15 +522,34 @@ class ImageProcessingGUI:
             self.lbl_analysis_result.config(text="Please select all valid folders and a method.", foreground="red")
             return
 
-        run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method)
-        self.lbl_analysis_result.config(text=f"Analysis for {method} complete. Results saved.", foreground="green")
+        try:
+            # 1. Run the analysis function
+            run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method)
+            
+            # 2. Read the analysis.txt file
+            analysis_file_path = os.path.join(analysis_output_folder, "analysis.txt")
+            if not os.path.exists(analysis_file_path):
+                 self.lbl_analysis_result.config(text=f"Analysis for {method} complete, but analysis.txt not found.", foreground="red")
+                 return
+                 
+            with open(analysis_file_path, 'r') as file:
+                txt_output = file.read()
 
-        txt_output = ""
-        with open(analysis_output_folder+"/analysis.txt", 'r') as file:
-            for line in file:
-                txt_output += line
-        self.txt_analysis_results.config(text=txt_output)
-        
+            # 3. Update the Text widget
+            self.txt_analysis_results.config(state=tk.NORMAL) # Enable editing
+            self.txt_analysis_results.delete('1.0', tk.END) # Clear existing text
+            self.txt_analysis_results.insert(tk.END, txt_output) # Insert new text
+            self.txt_analysis_results.config(state=tk.DISABLED) # Make it read-only again
+            
+            # 4. Update the status label
+            self.lbl_analysis_result.config(text=f"Analysis for {method} complete. Results displayed.", foreground="green")
+
+        except Exception as e:
+            self.lbl_analysis_result.config(text=f"Error during analysis: {e}", foreground="red")
+            self.txt_analysis_results.config(state=tk.NORMAL)
+            self.txt_analysis_results.delete('1.0', tk.END)
+            self.txt_analysis_results.insert(tk.END, f"Error: {e}")
+            self.txt_analysis_results.config(state=tk.DISABLED)
 
 
 if __name__ == "__main__":
