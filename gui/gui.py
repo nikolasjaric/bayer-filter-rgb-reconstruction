@@ -8,6 +8,8 @@ from functions.synthetic_image_functions import generate_synthetic_images
 from functions.nearest_neighbour import nearest_neighbour
 from functions.analysis import run_analysis
 from functions.noise import add_noise
+from functions.frequency_reconstruction_fourier import frequency_reconstruction_fourier
+
 
 # --- Placeholder Functions ---
 
@@ -31,10 +33,7 @@ def malvar_he_cutler_mhc(input_path, output_path):
     print(f"Running Malvar-He-Cutler (MHC) demosaicing from: {input_path} to: {output_path}")
     pass
 
-def frequency_reconstruction_fourier(input_path, output_path):
-    """Placeholder for Frequency Reconstruction (Fourier) demosaicing."""
-    print(f"Running Frequency Reconstruction (Fourier) demosaicing from: {input_path} to: {output_path}")
-    pass
+
 
 def total_variation_regularization_tv(input_path, output_path):
     """Placeholder for Total Variation Regularization (TV) demosaicing."""
