@@ -5,11 +5,13 @@ import os
 
 def add_noise(original_folder, noise_folder):
     originals = Path(original_folder).glob('*.png')
+    sigma = 20
+    mean = 0
     for original in originals:
         img = cv2.imread(original)
-        noise = np.random.normal(0, 50, img.shape)
-        noised = img + noise
-        noised = np.clip(noised, 0, 255).astype(np.uint8)
+        gauss = np.random.normal(mean, sigma, img.shape)
+        gauss = gauss.reshape(img.shape)
+        noised = img + gauss
 
         base_name = os.path.basename(original)
         name, ext = os.path.splitext(base_name)
