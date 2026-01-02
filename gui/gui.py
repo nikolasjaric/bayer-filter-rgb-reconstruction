@@ -3,7 +3,7 @@ from tkinter import ttk, filedialog, messagebox
 import os
 from PIL import Image, ImageTk
 
-from functions.mosaic_functions_v2 import bayer_mosaic_generator
+from functions.mosaic_functions import bayer_mosaic_generator
 from functions.synthetic_image_functions import generate_synthetic_images
 from functions.nearest_neighbour import nearest_neighbour
 from functions.analysis import run_analysis
