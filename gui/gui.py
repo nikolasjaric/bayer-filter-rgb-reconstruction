@@ -47,17 +47,28 @@ def cnn_based_reconstruction(input_path, output_path):
 
     cnn_root = Path(__file__).resolve().parents[1] / "functions" / "cnn"
 
+    input_path = Path(input_path)
+
+    # provjera postoji li barem jedna slika s prefiksom "mosaic_noise"
+    has_noise = any(p.name.startswith("mosaic_noise") for p in input_path.glob("*.png"))
+
+    noise_level = "0.0785" if has_noise else "0.0"
+
     cmd = [
         sys.executable,
         "-m", "demosaicnet_ours",
         "--input_dir", str(input_path),
         "--output_dir", str(output_path),
-        "--noise", "0.0",
+        "--noise", noise_level,
     ]
-
+    
+    print(
+        f"Running CNN-Based Reconstruction from: {input_path} to: {output_path} "
+        f"(noise level = {noise_level})"
+    )
     subprocess.run(cmd, cwd=str(cnn_root), check=True)
 
-    print(f"Running CNN-Based Reconstruction demosaicing from: {input_path} to: {output_path}")
+
 
     
 
