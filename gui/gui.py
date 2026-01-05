@@ -139,7 +139,7 @@ class ImageProcessingGUI:
         # Move these ABOVE the notebook/tab setup
         self.synth_output_folder = tk.StringVar(value="No folder selected.")
         #self.noise_input_folder = tk.StringVar(value="No folder selected.")
-        self.noise_value = tk.IntVar(value=0)
+        self.noise_value = tk.DoubleVar(value=0)
         self.noise_output_folder = tk.StringVar(value="No folder selected.")
         self.mosaic_input_folder = tk.StringVar(value="No folder selected.")
         self.mosaic_output_folder = tk.StringVar(value="No folder selected.")
@@ -431,7 +431,7 @@ class ImageProcessingGUI:
 
     def _run_add_noise(self):
         """Action for the Run Add Noise button."""
-        input_path = self.noise_input_folder.get()
+        input_path = self.mosaic_input_folder.get()
         output_path = self.noise_output_folder.get()
         
         if os.path.isdir(input_path) and os.path.isdir(output_path):
