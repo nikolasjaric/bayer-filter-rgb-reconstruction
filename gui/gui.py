@@ -9,6 +9,8 @@ from functions.nearest_neighbour import nearest_neighbour
 from functions.analysis import run_analysis
 from functions.noise import add_noise
 from functions.frequency_reconstruction_fourier import frequency_reconstruction_fourier
+from functions.frequency_reconstruction_dubois import frequency_reconstruction_dubois
+
 
 
 # --- Placeholder Functions ---
@@ -16,6 +18,47 @@ from functions.frequency_reconstruction_fourier import frequency_reconstruction_
 import subprocess
 import sys
 from pathlib import Path
+
+
+class ScrollableFrame(ttk.Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        
+        # 1. Create Canvas
+        self.canvas = tk.Canvas(self, highlightthickness=0)
+        # 2. Add Scrollbar
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        # 3. Create the interior frame
+        self.scrollable_frame = ttk.Frame(self.canvas)
+
+        # Configure Canvas to update scrollregion when frame size changes
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+
+        # Create window inside canvas
+        self.canvas_window = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        # Make sure the frame expands to the width of the canvas
+        self.canvas.bind('<Configure>', self._on_canvas_configure)
+
+        # Link scrollbar to canvas
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Pack everything
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        # Bind Mousewheel
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
+    def _on_canvas_configure(self, event):
+        # Update the width of the inner frame to match the canvas width
+        self.canvas.itemconfig(self.canvas_window, width=event.width)
+
+    def _on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
 
 def bilinear_interpolation(input_path, output_path):
@@ -80,12 +123,63 @@ DEMOSAIC_METHODS = {
     "Bicubic Interpolation": bicubic_interpolation,
     "Malvar-He-Cutler (MHC)": malvar_he_cutler_mhc,
     "Frequency Reconstruction (Fourier)": frequency_reconstruction_fourier,
+    "Frequency Reconstruction (Dubois)": frequency_reconstruction_dubois,
     "Total Variation Regularization (TV)": total_variation_regularization_tv,
     "CNN-Based Reconstruction": cnn_based_reconstruction,
 }
 
 
 class ImageProcessingGUI:
+    def __init__(self, master):
+        self.master = master
+        master.title("Image Processing Tool")
+        master.minsize(900, 700) # Good for scrollable windows
+
+        # --- STEP 1: DEFINE ALL VARIABLES FIRST ---
+        # Move these ABOVE the notebook/tab setup
+        self.synth_output_folder = tk.StringVar(value="No folder selected.")
+        self.noise_input_folder = tk.StringVar(value="No folder selected.")
+        self.noise_output_folder = tk.StringVar(value="No folder selected.")
+        self.mosaic_input_folder = tk.StringVar(value="No folder selected.")
+        self.mosaic_output_folder = tk.StringVar(value="No folder selected.")
+        
+        self.demosaic_input_folder = tk.StringVar(value="No folder selected.")
+        self.demosaic_output_folder = tk.StringVar(value="No folder selected.")
+        self.demosaic_method = tk.StringVar()
+        
+        self.analysis_original_folder = tk.StringVar(value="No folder selected.")
+        self.analysis_reconstructed_folder = tk.StringVar(value="No folder selected.")
+        self.analysis_output_folder = tk.StringVar(value="No folder selected.")
+        self.analysis_method = tk.StringVar()
+        
+        self.image_list_mosaic = tk.StringVar()
+        self.image_list_demosaic = tk.StringVar()
+        
+        self.current_mosaic_image = None
+        self.current_demosaic_image = None
+
+        # --- STEP 2: CREATE THE NOTEBOOK AND SCROLLABLE WRAPPERS ---
+        self.notebook = ttk.Notebook(master)
+        self.notebook.pack(pady=10, padx=10, expand=True, fill='both')
+
+        # Using the ScrollableFrame class I provided in the previous message
+        self.tab1_scroll = ScrollableFrame(self.notebook)
+        self.tab2_scroll = ScrollableFrame(self.notebook)
+        self.tab3_scroll = ScrollableFrame(self.notebook)
+        self.tab4_scroll = ScrollableFrame(self.notebook)
+
+        self.notebook.add(self.tab1_scroll, text='Welcome')
+        self.notebook.add(self.tab2_scroll, text='Bayer Mosaicing')
+        self.notebook.add(self.tab3_scroll, text='Demosaicing')
+        self.notebook.add(self.tab4_scroll, text='Analysis')
+
+        # --- STEP 3: INITIALIZE CONTENT ---
+        # Now the variables exist, so these calls won't crash
+        self._setup_welcome_tab(self.tab1_scroll.scrollable_frame)
+        self._setup_bayer_mosaicing_tab(self.tab2_scroll.scrollable_frame)
+        self._setup_demosaicing_tab(self.tab3_scroll.scrollable_frame)
+        self._setup_analysis_tab(self.tab4_scroll.scrollable_frame)
+    """
     def __init__(self, master):
         self.master = master
         master.title("Image Processing Tool")
@@ -134,6 +228,9 @@ class ImageProcessingGUI:
         self._setup_bayer_mosaicing_tab(self.tab2)
         self._setup_demosaicing_tab(self.tab3)
         self._setup_analysis_tab(self.tab4)
+    """
+        
+        
 
     # --- Helper Functions ---
 
@@ -479,6 +576,7 @@ class ImageProcessingGUI:
         lbl_analysis_out_path = ttk.Label(left_frame, textvariable=self.analysis_output_folder, wraplength=300)
         lbl_analysis_out_path.pack(pady=5)
 
+        """
         # Choose method dropdown (Now only contains specific methods)
         ttk.Label(left_frame, text="Choose method:").pack(pady=(15, 5), anchor='w')
         # FIX: Removed "All Methods"
@@ -488,7 +586,7 @@ class ImageProcessingGUI:
         # Select the first item by default if the list isn't empty
         if method_names:
             self.analysis_dropdown.current(0)
-
+        """
         # Metrics display
         ttk.Label(left_frame, text="Metrics: MSE, PSNR, SSIM, MS-SSIM and Lab CIEDE2000", font=("Helvetica", 10)).pack(pady=10, anchor='w')
 
@@ -526,20 +624,20 @@ class ImageProcessingGUI:
         original_folder = self.analysis_original_folder.get()
         reconstructed_folder = self.analysis_reconstructed_folder.get()
         analysis_output_folder = self.analysis_output_folder.get()
-        method = self.analysis_method.get()
+        #method = self.analysis_method.get()
         
-        if not (os.path.isdir(original_folder) and os.path.isdir(reconstructed_folder) and os.path.isdir(analysis_output_folder) and method):
+        if not (os.path.isdir(original_folder) and os.path.isdir(reconstructed_folder) and os.path.isdir(analysis_output_folder)):
             self.lbl_analysis_result.config(text="Please select all valid folders and a method.", foreground="red")
             return
 
         try:
             # 1. Run the analysis function
-            run_analysis(original_folder, reconstructed_folder, analysis_output_folder, method)
+            run_analysis(original_folder, reconstructed_folder, analysis_output_folder)
             
             # 2. Read the analysis.txt file
             analysis_file_path = os.path.join(analysis_output_folder, "analysis.txt")
             if not os.path.exists(analysis_file_path):
-                 self.lbl_analysis_result.config(text=f"Analysis for {method} complete, but analysis.txt not found.", foreground="red")
+                 self.lbl_analysis_result.config(text=f"Analysis complete, but analysis.txt not found.", foreground="red")
                  return
                  
             with open(analysis_file_path, 'r') as file:
@@ -552,7 +650,7 @@ class ImageProcessingGUI:
             self.txt_analysis_results.config(state=tk.DISABLED) # Make it read-only again
             
             # 4. Update the status label
-            self.lbl_analysis_result.config(text=f"Analysis for {method} complete. Results displayed.", foreground="green")
+            self.lbl_analysis_result.config(text=f"Analysis for complete. Results displayed.", foreground="green")
 
         except Exception as e:
             self.lbl_analysis_result.config(text=f"Error during analysis: {e}", foreground="red")

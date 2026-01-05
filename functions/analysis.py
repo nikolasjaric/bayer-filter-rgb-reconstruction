@@ -55,7 +55,7 @@ def CIEDE2000(original, demosaiced):
     return c2000
 
 
-def run_analysis (original_folder, reconstructed_folder, analysis_output_folder, method):
+def run_analysis (original_folder, reconstructed_folder, analysis_output_folder):
     originals = Path(original_folder).glob('*.png')
     reconstructeds = Path(reconstructed_folder).glob('*.png')
     file_name = analysis_output_folder+"/analysis.txt"
