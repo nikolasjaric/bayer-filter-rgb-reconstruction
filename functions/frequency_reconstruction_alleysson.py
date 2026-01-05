@@ -1,38 +1,4 @@
-"""
-PROJECT CONTEXT
----------------
-This file is part of a Bayer CFA demosaicing project evaluated via an existing GUI.
-Correct interpretation requires reading the full repository,
-with particular attention to Python files in:
-- functions/
-- gui/
-
-METHOD CONTEXT (FREQUENCY SELECTION DEMOSAICING)
------------------------------------------------
-Based on Alleysson–Süsstrunk–Hérault (IEEE TIP, 2005).
-
-The method is described in detail in the accompanying PDF document
-located in the repository under:
-- docs/
-
-The mosaiced CFA image is analyzed in the Fourier domain as a superposition of:
-- low-frequency luminance,
-- frequency-shifted, band-limited chrominance components.
-
-Conceptual processing order:
-1) Fourier transform of the CFA image.
-2) Luminance recovery by low-pass frequency selection.
-3) Chrominance recovery from complementary high-frequency bands.
-4) Chrominance demultiplexing according to the Bayer RGGB pattern.
-5) RGB reconstruction by additive recombination of luminance and chrominance.
-
-DATA ASSUMPTIONS
-----------------
-- Standard Bayer RGGB sampling.
-- One color sample per pixel.
-- Output RGB images must remain compatible with the existing GUI.
-"""
-
+#frequency reconstruction with Alleysson–Süsstrunk–Hérault method
 import os
 from glob import glob
 import cv2
