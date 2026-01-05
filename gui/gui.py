@@ -8,7 +8,7 @@ from functions.synthetic_image_functions import generate_synthetic_images
 from functions.nearest_neighbour import nearest_neighbour
 from functions.analysis import run_analysis
 from functions.noise import add_noise
-from functions.frequency_reconstruction_fourier import frequency_reconstruction_fourier
+from functions.frequency_reconstruction_alleysson import frequency_reconstruction_alleysson
 from functions.frequency_reconstruction_dubois import frequency_reconstruction_dubois
 
 
@@ -122,7 +122,7 @@ DEMOSAIC_METHODS = {
     "Bilinear Interpolation": bilinear_interpolation,
     "Bicubic Interpolation": bicubic_interpolation,
     "Malvar-He-Cutler (MHC)": malvar_he_cutler_mhc,
-    "Frequency Reconstruction (Fourier)": frequency_reconstruction_fourier,
+    "Frequency Reconstruction (Alleysson_Süsstrunk_Herault)": frequency_reconstruction_alleysson,
     "Frequency Reconstruction (Dubois)": frequency_reconstruction_dubois,
     "Total Variation Regularization (TV)": total_variation_regularization_tv,
     "CNN-Based Reconstruction": cnn_based_reconstruction,
