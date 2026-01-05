@@ -75,7 +75,7 @@ def run_analysis (original_folder, reconstructed_folder, analysis_output_folder)
         value = MS_SSIM(image1, image2)
         f.write("\n MS_SSIM: " + str(value))
         value = CIEDE2000(image1, image2)
-        f.write("\n CIEDE2000: " + str(value) + "\n\n")
+        f.write("\n CIEDE2000: " + str(value[-1]) + "\n\n")
 
     f.close()
     return 

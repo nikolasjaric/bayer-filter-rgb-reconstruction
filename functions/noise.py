@@ -3,9 +3,9 @@ from pathlib import Path
 import cv2
 import os
 
-def add_noise(original_folder, noise_folder):
+def add_noise(original_folder, noise_folder, noise_value):
     originals = Path(original_folder).glob('*.png')
-    sigma = 20
+    sigma = noise_value
     mean = 0
     for original in originals:
         img = cv2.imread(original)
