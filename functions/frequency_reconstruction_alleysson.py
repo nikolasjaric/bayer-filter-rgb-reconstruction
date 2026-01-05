@@ -10,7 +10,7 @@ def _rggb_masks(shape):
     This matches the pattern used in bayer_mosaic_generator():
     G R
     B G
-    Note: Despite the function name (_rggb_masks), this project uses GRBG pattern.
+    Despite the function name (_rggb_masks), this project uses GRBG pattern.
     """
     H, W = shape
     R_mask = np.zeros((H, W), dtype=bool)
@@ -29,35 +29,31 @@ def _bayer_from_packed_rgb(packed_rgb: np.ndarray) -> np.ndarray:
     """
     Convert a 'packed' 3-channel Bayer mosaic (R/G/B present only at their positions, others 0)
     into a single-channel Bayer CFA signal (scalar per pixel).
+    
+    *packed_rgb is expected to be in RGB channel order (not BGR).
     """
     if packed_rgb.ndim != 3 or packed_rgb.shape[2] < 3:
         raise ValueError("packed_rgb must be HxWx3 (or HxWx4) array")
 
-    # uzimamo samo prva 3 kanala (RGB)
+    # Extract first 3 channels (R, G, B in RGB order)
     rgb = packed_rgb[..., :3]
     H, W, _ = rgb.shape
     bayer = np.zeros((H, W), dtype=rgb.dtype)
 
     R_mask, G_mask, B_mask = _rggb_masks((H, W))
 
-    # pick values from the corresponding channels at the mask positions
-    bayer[R_mask] = rgb[..., 0][R_mask]
-    bayer[G_mask] = rgb[..., 1][G_mask]
-    bayer[B_mask] = rgb[..., 2][B_mask]
+    # GRBG Bayer pattern: R at (even_row, odd_col), G at (even_row, even_col) & (odd_row, odd_col), B at (odd_row, even_col)
+    # Assume packed_rgb has R in channel 0, G in channel 1, B in channel 2 (RGB convention)
+    bayer[R_mask] = rgb[..., 0][R_mask]  # Channel 0 = R
+    bayer[G_mask] = rgb[..., 1][G_mask]  # Channel 1 = G
+    bayer[B_mask] = rgb[..., 2][B_mask]  # Channel 2 = B
 
     return bayer
 
 def _estimate_luminance_fourier(cfa: np.ndarray, cutoff: float = 0.45) -> np.ndarray:
     """ Estimate luminance from a CFA image via a low-pass filter in the Fourier domain.
-    
-    A–S–H: Luminance is the low-frequency component of the CFA,
-    obtained by frequency separation. Cutoff is in normalized frequency domain (0–0.5).
-    
-    Note: previous max-based normalization caused Y to be scaled to the CFA max,
-    which reduces residual chrominance C = CFA - Y and leads to washed-out colors.
-    Here we match the mean (DC) level of Y to the CFA mean instead (preserves chroma energy).
+    Uses perceptual RGB weighting to account for human color sensitivity and GRBG sampling parity.
     """
-    
     cfa_f = cfa.astype(np.float64)
     H, W = cfa_f.shape
     
@@ -88,15 +84,35 @@ def _estimate_luminance_fourier(cfa: np.ndarray, cutoff: float = 0.45) -> np.nda
     # Remove padding
     lum = lum_padded[H//4:H//4+H, W//4:W//4+W]
     
-    # Replace previous max-based normalization (which over-attenuated chroma).
-    # Match mean/DC level instead to preserve chrominance energy:
-    lum_mean = np.mean(lum)
-    cfa_mean = np.mean(cfa_f)
-    if np.abs(lum_mean) > 1e-12:
-        lum = lum * (cfa_mean / lum_mean)
-    # Otherwise leave lum as-is.
-
-    return lum.astype(np.float64)
+    
+    R_mask, G_mask, B_mask = _rggb_masks((H, W))
+    
+    lum_R = np.zeros_like(lum)
+    lum_G = np.zeros_like(lum)
+    lum_B = np.zeros_like(lum)
+    
+    lum_R[R_mask] = lum[R_mask]
+    lum_G[G_mask] = lum[G_mask]
+    lum_B[B_mask] = lum[B_mask]
+    
+    # Interpolate each channel (light blur to preserve low-freq structure)
+    lum_R_full = cv2.GaussianBlur(lum_R, (3, 3), sigmaX=0.5, sigmaY=0.5, borderType=cv2.BORDER_REFLECT)
+    lum_G_full = cv2.GaussianBlur(lum_G, (3, 3), sigmaX=0.5, sigmaY=0.5, borderType=cv2.BORDER_REFLECT)
+    lum_B_full = cv2.GaussianBlur(lum_B, (3, 3), sigmaX=0.5, sigmaY=0.5, borderType=cv2.BORDER_REFLECT)
+    
+    # Combine with sampling-density-adjusted weights (ITU-R BT.709 perceptual weights,
+    # scaled inversely by GRBG sampling density to preserve energy balance).
+    # Standard weights: pR=0.2125, pG=0.7154, pB=0.0721
+    # Sampling density: R=0.25, G=0.50, B=0.25
+    # Adjusted: pR_adj=0.85, pG_adj=1.43, pB_adj=0.29 (relative)
+    # Normalized sum to preserve mean luminance: divide by (0.85+1.43+0.29) ≈ 2.57
+    pR_adj = 0.2125 / 0.25 / 2.57  # ≈ 0.330
+    pG_adj = 0.7154 / 0.50 / 2.57  # ≈ 0.556
+    pB_adj = 0.0721 / 0.25 / 2.57  # ≈ 0.112
+    
+    lum_weighted = pR_adj * lum_R_full + pG_adj * lum_G_full + pB_adj * lum_B_full
+    
+    return lum_weighted.astype(np.float64)
 
 def _interpolate_chrominance(ch: np.ndarray, ksize: int = 5, sigma: float = 1.0) -> np.ndarray:
     """
@@ -147,9 +163,10 @@ def _demosaic_alleysson_fourier(cfa: np.ndarray) -> np.ndarray:
     """
     H, W = cfa.shape
     
-    # 1) Luminance: Fourier-based frequency separation
+    # 1) Luminance: Fourier-based frequency separation; a cutoff of 0.45 maintains finer
+    # color information while still separating luminance from fine-scale chrominance.
     print("  [Luminance] Computing Fourier-based low-pass filter...")
-    Y = _estimate_luminance_fourier(cfa, cutoff=0.45)  # keep cutoff recommended by Alleysson
+    Y = _estimate_luminance_fourier(cfa, cutoff=0.45)
     _check_array_health(Y, "Luminance Y")
     
     # 2) Chrominance as residual
@@ -189,12 +206,10 @@ def _demosaic_alleysson_fourier(cfa: np.ndarray) -> np.ndarray:
     # GRBG Bayer pattern:
     #   G(50%) R(25%)
     #   B(25%) G(50%)
-    # Red and Blue are sampled at 25% density; apply gain 2.0 to compensate.
-    # Green is sampled at 50% density; no gain needed.
-    print("  [Gain] Applying color-difference gains (GRBG sampling bias)...")
-    C_R[R_mask] *= 2.0  # Red sampled at 25%, scale by 2.0
-    C_B[B_mask] *= 2.0  # Blue sampled at 25%, scale by 2.0
-    # C_G: Green sampled at 50%, no scaling needed
+    # REMOVED: Incorrect sparse-domain gain amplification.
+    # Proper handling is via perceptual luminance weighting (now in _estimate_luminance_fourier).
+    # The residual chrominance C = CFA - Y is already correctly balanced by the luminance model.
+    print("  [Note] Chrominance balance handled via perceptual luminance weighting.")
     
     _check_array_health(C_R, "C_R (post-gain)")
     _check_array_health(C_G, "C_G (post-gain)")
@@ -231,9 +246,17 @@ def _demosaic_alleysson_fourier(cfa: np.ndarray) -> np.ndarray:
     G = Y + C_G_full
     B = Y + C_B_full
     
-    _check_array_health(R, "R_raw")
-    _check_array_health(G, "G_raw")
-    _check_array_health(B, "B_raw")
+    _check_array_health(R, "R_raw (pre-clip)")
+    _check_array_health(G, "G_raw (pre-clip)")
+    _check_array_health(B, "B_raw (pre-clip)")
+    
+    # Print per-channel balance:
+    R_mean = np.nanmean(R)
+    G_mean = np.nanmean(G)
+    B_mean = np.nanmean(B)
+    print(f"  [Output Balance] mean(R)={R_mean:.4f}, mean(G)={G_mean:.4f}, mean(B)={B_mean:.4f}")
+    print(f"  [Output Balance] R/G ratio: {R_mean / (G_mean + 1e-12):.4f} (target: 0.85–1.0)")
+    print(f"  [Output Balance] B/G ratio: {B_mean / (G_mean + 1e-12):.4f} (target: 0.75–0.95)")
     
     # Normalize/clamp to valid range
     R = np.clip(R, 0, 255)
@@ -247,20 +270,17 @@ def _demosaic_alleysson_fourier(cfa: np.ndarray) -> np.ndarray:
     
     return rgb
 
+
 def frequency_reconstruction_alleysson(input_path: str, output_path: str) -> None:
     """
-    Main function expected by the GUI.
-    input_path: folder with .png Bayer mosaics (3-channel 'packed').
+    Main function for frequency-based Bayer demosaicing using Alleysson method.
+    input_path: folder containing .png Bayer mosaics (3-channel 'packed').
     output_path: folder for reconstructed RGB images (demosaic_<name>.png).
     """
     os.makedirs(output_path, exist_ok=True)
-    print(f"Running Frequency Reconstruction (Fourier) demosaicing from: {input_path} to: {output_path}")
-
     mosaic_files = glob(os.path.join(input_path, "*.png"))
-    if not mosaic_files:
-        print("No .png mosaic files found in input_path.")
-        return
-
+    print(f"Processing from: {input_path} to: {output_path}")
+    
     for file in mosaic_files:
         print(f"\nProcessing: {file}")
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
@@ -280,7 +300,6 @@ def frequency_reconstruction_alleysson(input_path: str, output_path: str) -> Non
             continue
 
         print(f"  Input shape: {packed_rgb.shape}, dtype: {packed_rgb.dtype}")
-
         try:
             cfa = _bayer_from_packed_rgb(packed_rgb)
         except ValueError as e:
@@ -289,9 +308,9 @@ def frequency_reconstruction_alleysson(input_path: str, output_path: str) -> Non
 
         print(f"  CFA shape: {cfa.shape}, dtype: {cfa.dtype}")
         _check_array_health(cfa.astype(np.float64), "CFA_input")
-
+        
         reconstructed_rgb = _demosaic_alleysson_fourier(cfa)
-
+        
         base_name = os.path.basename(file)
         name, ext = os.path.splitext(base_name)
         save_path = os.path.join(output_path, f"demosaic_{name}.png")
@@ -300,3 +319,4 @@ def frequency_reconstruction_alleysson(input_path: str, output_path: str) -> Non
         print(f"  Saved: {save_path}")
 
     print("\nFrequency Reconstruction with Alleysson method DONE.")
+
