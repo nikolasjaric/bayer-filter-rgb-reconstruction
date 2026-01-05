@@ -83,7 +83,7 @@ def total_variation_regularization_tv(input_path, output_path):
     print(f"Running Total Variation Regularization (TV) demosaicing from: {input_path} to: {output_path}")
     pass
 
-def cnn_based_reconstruction(input_path, output_path):
+def cnn_based_reconstruction(input_path, output_path, self_noise_value = 0.0):
 
     import subprocess, sys
     from pathlib import Path
@@ -95,7 +95,9 @@ def cnn_based_reconstruction(input_path, output_path):
     # provjera postoji li barem jedna slika s prefiksom "mosaic_noise"
     has_noise = any(p.name.startswith("mosaic_noise") for p in input_path.glob("*.png"))
 
-    noise_level = "0.0785" if has_noise else "0.0"
+    self_noise_level = str(self_noise_value / 255.0) if has_noise else "0.0"
+
+    noise_level = self_noise_level if has_noise else "0.0"
 
     cmd = [
         sys.executable,
@@ -107,7 +109,7 @@ def cnn_based_reconstruction(input_path, output_path):
     
     print(
         f"Running CNN-Based Reconstruction from: {input_path} to: {output_path} "
-        f"(noise level = {noise_level})"
+        f"(noise level = {noise_level} in [0,1] scale (i.e., {self_noise_level} in [0,255] scale))"
     )
     subprocess.run(cmd, cwd=str(cnn_root), check=True)
 
@@ -436,6 +438,7 @@ class ImageProcessingGUI:
         
         if os.path.isdir(input_path) and os.path.isdir(output_path):
             add_noise(input_path, output_path, self.noise_value.get())
+            print("Added Noise level:", self.noise_value.get())
             # self.lbl_noise_result.config(text="Noise added", foreground="green")
         else:
             self.lbl_noise_result.config(text="Please choose valid input and output folders.", foreground="red")
@@ -524,6 +527,7 @@ class ImageProcessingGUI:
         """Action for the Run method button on the Demosaicing tab."""
         input_path = self.demosaic_input_folder.get()
         output_path = self.demosaic_output_folder.get()
+        noise_value = self.noise_value.get()
         method_name = self.demosaic_method.get()
         
         if not (os.path.isdir(input_path) and os.path.isdir(output_path) and method_name):
@@ -533,7 +537,10 @@ class ImageProcessingGUI:
         # Get the corresponding function and run it
         func = DEMOSAIC_METHODS.get(method_name)
         if func:
-            func(input_path, output_path)
+            if func == cnn_based_reconstruction:
+                func(input_path, output_path, noise_value)
+            else:
+                func(input_path, output_path)
             self.lbl_demosaic_result.config(text=f"'{method_name}' completed.", foreground="green")
         else:
             self.lbl_demosaic_result.config(text="Error: Unknown method selected.", foreground="red")
