@@ -6,6 +6,9 @@ from PIL import Image, ImageTk
 from functions.mosaic_functions import bayer_mosaic_generator
 from functions.synthetic_image_functions import generate_synthetic_images
 from functions.nearest_neighbour import nearest_neighbour
+from functions.bilinear_interpolation import bilinear_interpolation
+from functions.bicubic_interpolation import bicubic_interpolation
+from functions.malvar_he_cutler_mhc import malvar_he_cutler_mhc
 from functions.analysis import run_analysis
 from functions.noise import add_noise
 from functions.frequency_reconstruction_alleysson import frequency_reconstruction_alleysson
@@ -59,22 +62,6 @@ class ScrollableFrame(ttk.Frame):
 
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-
-
-def bilinear_interpolation(input_path, output_path):
-    """Placeholder for Bilinear Interpolation demosaicing."""
-    print(f"Running Bilinear Interpolation demosaicing from: {input_path} to: {output_path}")
-    pass
-
-def bicubic_interpolation(input_path, output_path):
-    """Placeholder for Bicubic Interpolation demosaicing."""
-    print(f"Running Bicubic Interpolation demosaicing from: {input_path} to: {output_path}")
-    pass
-
-def malvar_he_cutler_mhc(input_path, output_path):
-    """Placeholder for Malvar-He-Cutler (MHC) demosaicing."""
-    print(f"Running Malvar-He-Cutler (MHC) demosaicing from: {input_path} to: {output_path}")
-    pass
 
 
 
