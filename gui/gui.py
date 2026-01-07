@@ -13,6 +13,8 @@ from functions.analysis import run_analysis
 from functions.noise import add_noise
 from functions.frequency_reconstruction_alleysson import frequency_reconstruction_alleysson
 from functions.frequency_reconstruction_dubois import frequency_reconstruction_dubois
+from functions.total_variation_regularization import total_variation_regularization_tv
+
 
 
 
@@ -63,12 +65,6 @@ class ScrollableFrame(ttk.Frame):
     def _on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
-
-
-def total_variation_regularization_tv(input_path, output_path):
-    """Placeholder for Total Variation Regularization (TV) demosaicing."""
-    print(f"Running Total Variation Regularization (TV) demosaicing from: {input_path} to: {output_path}")
-    pass
 
 def cnn_based_reconstruction(input_path, output_path, self_noise_value = 0.0):
 
