@@ -11,8 +11,7 @@ from functions.bicubic_interpolation import bicubic_interpolation
 from functions.malvar_he_cutler_mhc import malvar_he_cutler_mhc
 from functions.analysis import run_analysis
 from functions.noise import add_noise
-from functions.frequency_reconstruction_alleysson import frequency_reconstruction_alleysson
-from functions.frequency_reconstruction_dubois import frequency_reconstruction_dubois
+from functions.frequency_reconstruction import frequency_reconstruction
 from functions.total_variation_regularization import total_variation_regularization_tv
 
 
@@ -107,8 +106,7 @@ DEMOSAIC_METHODS = {
     "Bilinear Interpolation": bilinear_interpolation,
     "Bicubic Interpolation": bicubic_interpolation,
     "Malvar-He-Cutler (MHC)": malvar_he_cutler_mhc,
-    "Frequency Reconstruction (Alleysson_Süsstrunk_Herault)": frequency_reconstruction_alleysson,
-    "Frequency Reconstruction (Dubois)": frequency_reconstruction_dubois,
+    "Frequency Reconstruction(Fourier)": frequency_reconstruction,
     "Total Variation Regularization (TV)": total_variation_regularization_tv,
     "CNN-Based Reconstruction": cnn_based_reconstruction,
 }
