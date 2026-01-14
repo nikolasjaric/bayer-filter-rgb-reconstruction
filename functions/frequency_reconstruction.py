@@ -268,4 +268,3 @@ def frequency_reconstruction(input_path: str, output_path: str) -> None:
 
         cv2.imwrite(save_path, cv2.cvtColor(reconstructed_rgb, cv2.COLOR_RGB2BGR))
 
-print("\nFrequency Reconstruction DONE.")
