@@ -358,15 +358,20 @@ class ImageProcessingGUI:
                 btn_choose_noise_out.pack(pady=5, fill='x', padx=5)
                 lbl_noise_out_path.pack(pady=5, padx=5)
                 scl_noise_value.pack(pady=5, padx=5)
+                lbl_noise_value.pack(pady=5, padx=5)
             else:
                 btn_choose_noise_out.pack_forget()
                 lbl_noise_out_path.pack_forget()
                 scl_noise_value.pack_forget()
+                lbl_noise_value.pack_forget()
+        def slider_changed(event):
+            lbl_noise_value.configure(text=self.noise_value.get())
         chkbtn = tk.Checkbutton(noise_frame,text="Add noise", command=toggle_noise_widgets, onvalue=1, offvalue=0, variable=choiceNum)
         chkbtn.pack()
         btn_choose_noise_out = ttk.Button(noise_frame, text="Choose output folder for noise", command=lambda: self._choose_folder(self.noise_output_folder))
         lbl_noise_out_path = ttk.Label(noise_frame, textvariable=self.noise_output_folder, wraplength=300)
-        scl_noise_value = ttk.Scale(noise_frame, variable=self.noise_value, from_=0, to=20)
+        scl_noise_value = ttk.Scale(noise_frame, variable=self.noise_value, from_=0, to=20, command=slider_changed)
+        lbl_noise_value = ttk.Label(noise_frame, text=self.noise_value.get(), wraplength=300)
 
         # Choose output folder button
         btn_choose_mosaic_out = ttk.Button(left_frame, text="Choose output folder for mosaic", command=lambda: self._choose_folder(self.mosaic_output_folder))
