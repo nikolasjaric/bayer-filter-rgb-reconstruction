@@ -1,7 +1,7 @@
 # bayer-filter-rgb-reconstruction
 Rekonstrukcija RGB signala iz Bayerova filtra u digitalnim kamerama.
 
-Preduvjeti
+**Preduvjeti**
 
 * Instaliran Python 3.x (preporuka: 3.10+)
 
