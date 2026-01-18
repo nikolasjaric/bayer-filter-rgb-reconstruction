@@ -639,7 +639,7 @@ class ImageProcessingGUI:
             self.txt_analysis_results.config(state=tk.DISABLED) # Make it read-only again
             
             # 4. Update the status label
-            self.lbl_analysis_result.config(text=f"Analysis for complete. Results displayed.", foreground="green")
+            self.lbl_analysis_result.config(text=f"Analysis complete. Results displayed.", foreground="green")
 
         except Exception as e:
             self.lbl_analysis_result.config(text=f"Error during analysis: {e}", foreground="red")
